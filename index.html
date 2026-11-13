@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server-Regeln</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gruen: #5dff7a;
+    --gold: #ffd54a;
+    --bg: #0b1410;
+    --karte: rgba(255,255,255,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #e8f5ea;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(93,255,122,0.15), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,213,74,0.12), transparent 40%),
+      var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Pixel-Gitter im Hintergrund */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  header {
+    text-align: center;
+    padding: 80px 20px 40px;
+    position: relative;
+  }
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1.6rem, 5vw, 3rem);
+    color: var(--gruen);
+    text-shadow: 4px 4px 0 #1b5e2a, 0 0 30px rgba(93,255,122,0.6);
+    animation: glow 3s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { text-shadow: 4px 4px 0 #1b5e2a, 0 0 15px rgba(93,255,122,0.4); }
+    to   { text-shadow: 4px 4px 0 #1b5e2a, 0 0 40px rgba(93,255,122,0.9); }
+  }
+  .sub {
+    margin-top: 20px;
+    color: #9bb9a0;
+    font-size: 1.1rem;
+  }
+  .regeln {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 24px;
+  }
+  @media (max-width: 520px) {
+    .regeln { grid-template-columns: 1fr; }
+  }
+  .karte {
+    position: relative;
+    background: var(--karte);
+    border: 2px solid rgba(93,255,122,0.35);
+    border-radius: 6px;
+    padding: 28px 24px 24px 90px;
+    backdrop-filter: blur(6px);
+    transition: transform .25s, border-color .25s, box-shadow .25s;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(30px);
+    animation: rein .7s forwards;
+  }
+  .karte:nth-child(1){ animation-delay: .1s; }
+  .karte:nth-child(2){ animation-delay: .25s; }
+  .karte:nth-child(3){ animation-delay: .4s; }
+  .karte:nth-child(4){ animation-delay: .55s; }
+  @keyframes rein { to { opacity: 1; transform: translateY(0); } }
+  .karte:hover {
+    transform: translateY(-6px) scale(1.02);
+    border-color: var(--gold);
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.5), 0 0 30px rgba(255,213,74,0.3);
+  }
+  .nummer {
+    position: absolute;
+    left: 20px; top: 22px;
+    width: 50px; height: 50px;
+    display: grid; place-items: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.2rem;
+    color: #0b1410;
+    background: var(--gruen);
+    border: 3px solid #1b5e2a;
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,0.25), inset 4px 4px 0 rgba(255,255,255,0.35);
+  }
+  .karte:hover .nummer { background: var(--gold); border-color: #8a6d00; }
+  .emoji { font-size: 1.6rem; margin-right: 6px; }
+  .karte h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: var(--gold);
+  }
+  .karte p { line-height: 1.6; color: #c9dccd; }
+  footer {
+    text-align: center;
+    padding: 50px 20px 60px;
+    color: #6f8a75;
+    font-size: 0.95rem;
+  }
+  .hinweis {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 10px 18px;
+    border: 2px dashed rgba(255,213,74,0.5);
+    color: var(--gold);
+    border-radius: 6px;
+  }
+
+  /* ===== Admin-Panel ===== */
+  .admin-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    font-family: 'Press Start 2P', monospace; font-size: 0.6rem;
+    padding: 12px 14px; color: #0b1410; background: var(--gold);
+    border: 3px solid #8a6d00; cursor: pointer;
+    box-shadow: inset -3px -3px 0 rgba(0,0,0,0.25), inset 3px 3px 0 rgba(255,255,255,0.35), 4px 4px 0 rgba(0,0,0,0.5);
+    transition: transform .15s, background .2s;
+  }
+  .admin-btn:hover { background: var(--gruen); border-color: #1b5e2a; transform: translateY(-2px); }
+  .overlay {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    place-items: center; padding: 20px;
+    background: rgba(0,0,0,0.78); backdrop-filter: blur(4px);
+  }
+  .overlay.offen { display: grid; }
+  .box {
+    width: 100%; max-width: 440px; position: relative;
+    background: #0f1d16; border: 2px solid var(--gruen); border-radius: 6px;
+    padding: 30px 26px; box-shadow: 8px 8px 0 rgba(0,0,0,0.6), 0 0 40px rgba(93,255,122,0.25);
+  }
+  .box.gross { max-width: 640px; }
+  .box h3 {
+    font-family: 'Press Start 2P', monospace; font-size: 0.85rem; line-height: 1.6;
+    color: var(--gold); margin-bottom: 18px;
+  }
+  .box p { color: #c9dccd; line-height: 1.6; margin-bottom: 16px; }
+  .box input {
+    width: 100%; padding: 14px; font-size: 1rem; color: #e8f5ea;
+    background: rgba(255,255,255,0.06); border: 2px solid rgba(93,255,122,0.4);
+    border-radius: 4px; outline: none; margin-bottom: 14px;
+  }
+  .box input:focus { border-color: var(--gold); }
+  .knopf {
+    font-family: 'Press Start 2P', monospace; font-size: 0.65rem;
+    padding: 13px 16px; cursor: pointer; color: #0b1410; background: var(--gruen);
+    border: 3px solid #1b5e2a; margin-right: 8px;
+    box-shadow: inset -3px -3px 0 rgba(0,0,0,0.25), inset 3px 3px 0 rgba(255,255,255,0.35);
+  }
+  .knopf:hover { background: var(--gold); border-color: #8a6d00; }
+  .knopf.grau { background: #3a4a40; color: #e8f5ea; border-color: #222d26; }
+  .fehler { color: #ff6b6b; min-height: 1.4em; margin-bottom: 8px; font-size: 0.95rem; }
+  .schuetteln { animation: schuettel .4s; }
+  @keyframes schuettel {
+    0%,100% { transform: translateX(0); } 20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); }
+  }
+  .tools { display: grid; gap: 12px; margin: 18px 0 22px; }
+  .tool {
+    padding: 14px 16px; border: 2px dashed rgba(255,213,74,0.45); border-radius: 4px; color: #e8f5ea;
+  }
+  .tool small { display: block; color: #8aa690; margin-top: 4px; }
+
+  .box.gross { max-height: 90vh; overflow-y: auto; }
+  .box textarea {
+    width: 100%; padding: 12px; font-size: 0.95rem; color: #e8f5ea; font-family: inherit;
+    background: rgba(255,255,255,0.06); border: 2px solid rgba(93,255,122,0.4);
+    border-radius: 4px; outline: none; resize: vertical; min-height: 64px;
+  }
+  .box textarea:focus { border-color: var(--gold); }
+  .knopf { margin-bottom: 8px; }
+  .edit-regel {
+    border: 2px solid rgba(93,255,122,0.3); border-radius: 4px; padding: 12px;
+    margin-bottom: 12px; background: rgba(255,255,255,0.03);
+  }
+  .edit-regel .kopf {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Press Start 2P', monospace; font-size: 0.6rem; color: var(--gruen); margin-bottom: 10px;
+  }
+  .edit-regel .zeile { display: flex; gap: 8px; }
+  .edit-regel input { margin-bottom: 8px; }
+  .edit-regel input.emoji-feld { width: 70px; flex: none; text-align: center; }
+  .mini {
+    font-size: 0.8rem; padding: 6px 9px; margin-left: 4px; cursor: pointer; color: #e8f5ea;
+    background: #3a4a40; border: 2px solid #222d26; border-radius: 3px;
+  }
+  .mini:hover { background: var(--gold); color: #0b1410; }
+  .mini.rot:hover { background: #ff6b6b; }
+  .leer { color: #8aa690; text-align: center; padding: 14px; }
+
+  /* ===== Ticket-Tool ===== */
+  .admin-btn.melde-btn { right: auto; left: 16px; background: #ff8a65; border-color: #8a3a1f; }
+  .admin-btn.melde-btn:hover { background: var(--gold); border-color: #8a6d00; }
+  .box label { display: block; color: #9bb9a0; font-size: 0.85rem; margin: 0 0 4px; }
+  .box input[type=date], .box input[type=time] { color-scheme: dark; }
+  .box .zeile { display: flex; gap: 10px; }
+  .box .zeile > div { flex: 1; min-width: 0; }
+  .fehler.ok { color: var(--gruen); }
+  .trenner { border: none; border-top: 2px dashed rgba(93,255,122,0.25); margin: 22px 0; }
+  .ergebnis { display: none; }
+  .ergebnis.zeigen { display: block; }
+</style>
+</head>
+<body>
+
+<button class="admin-btn" id="adminBtn" type="button">Admin-Panel</button>
+<button class="admin-btn melde-btn" id="meldeBtn" type="button">🚨 Melden</button>
+
+<div class="overlay" id="loginOverlay">
+  <div class="box" id="loginBox">
+    <h3>🔒 ADMIN-LOGIN</h3>
+    <p>Gib das Admin-Passwort ein.</p>
+    <input type="password" id="pw" placeholder="Passwort" autocomplete="off">
+    <div class="fehler" id="fehler"></div>
+    <button class="knopf" id="loginGo" type="button">Einloggen</button>
+    <button class="knopf grau" id="loginZu" type="button">Abbrechen</button>
+  </div>
+</div>
+
+<div class="overlay" id="adminOverlay">
+  <div class="box gross">
+    <h3>⚙️ ADMIN-PANEL</h3>
+    <p>Hier kannst du die Regeln ändern, hinzufügen, löschen und verschieben. Du siehst die Änderungen sofort, aber nur in deinem Browser. Damit alle sie sehen, lade die Seite als HTML herunter und ersetze damit die Datei auf deinem Webspace.</p>
+    <div id="editor"></div>
+    <button class="knopf" id="neueRegel" type="button">+ Neue Regel</button>
+    <button class="knopf" id="export" type="button">Als HTML herunterladen</button>
+    <button class="knopf grau" id="reset" type="button">Zurücksetzen</button>
+    <button class="knopf grau" id="logout" type="button">Ausloggen</button>
+    <hr class="trenner">
+    <h3>🎫 TICKET-EINSTELLUNGEN</h3>
+    <p>Damit gemeldete Tickets bei dir ankommen, trage hier eine Discord-Webhook-URL ein (Discord: Kanal-Einstellungen → Integrationen → Webhooks). Ohne Webhook bekommen Spieler den Ticket-Text zum Kopieren und müssen ihn dir selbst schicken. Vergiss nicht, danach die Seite herunterzuladen und hochzuladen.</p>
+    <input type="text" id="webhookFeld" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
+    <div class="fehler" id="webhookInfo"></div>
+  </div>
+</div>
+
+<div class="overlay" id="meldeOverlay">
+  <div class="box gross">
+    <h3>🚨 REGELBRUCH MELDEN</h3>
+    <div id="meldeFormular">
+      <label for="mSpieler">Wer hat gegen die Regeln verstoßen? (Minecraft-Name)</label>
+      <input type="text" id="mSpieler" maxlength="40" placeholder="z. B. Steve123" autocomplete="off">
+      <div class="zeile">
+        <div>
+          <label for="mDatum">Datum</label>
+          <input type="date" id="mDatum">
+        </div>
+        <div>
+          <label for="mZeit">Uhrzeit</label>
+          <input type="time" id="mZeit">
+        </div>
+      </div>
+      <label for="mText">Wie ist es abgelaufen?</label>
+      <textarea id="mText" maxlength="1000" placeholder="Beschreibe genau, was passiert ist: Was wurde gemacht, wo war es, wer hat es gesehen?"></textarea>
+      <div style="height:14px"></div>
+      <label for="mVon">Dein Name (optional)</label>
+      <input type="text" id="mVon" maxlength="40" placeholder="Dein Minecraft-Name" autocomplete="off">
+      <div class="fehler" id="mFehler"></div>
+      <button class="knopf" id="mSenden" type="button">Ticket abschicken</button>
+      <button class="knopf grau" id="mZu" type="button">Abbrechen</button>
+    </div>
+    <div class="ergebnis" id="meldeErgebnis">
+      <p id="mErgebnisText"></p>
+      <div id="mKopierBereich">
+        <textarea id="mTicketText" readonly style="min-height:170px"></textarea>
+        <div style="height:12px"></div>
+        <button class="knopf" id="mKopieren" type="button">Text kopieren</button>
+      </div>
+      <button class="knopf grau" id="mFertig" type="button">Schließen</button>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="ticketEinstellungen">{"webhook": ""}</script>
+
+<header>
+  <h1>SERVER-REGELN</h1>
+  <p class="sub">Damit alle Spaß haben &ndash; lies kurz durch, dann geht's los!</p>
+</header>
+
+<main class="regeln" id="regeln"></main>
+<script type="application/json" id="regelnDaten">
+[
+  {
+    "emoji": "🐶",
+    "titel": "Keine Hunde töten",
+    "text": "Hunde sind unsere treuen Begleiter. Wer einen Hund tötet, hat ein Problem mit uns allen."
+  },
+  {
+    "emoji": "🎭",
+    "titel": "Nur harmlose Pranks",
+    "text": "Ein Streich soll lustig sein, nicht nerven oder etwas kaputt machen. Wenn der andere nicht mitlachen kann, war's zu viel."
+  },
+  {
+    "emoji": "💎",
+    "titel": "Klauen? Zurückgeben!",
+    "text": "Am besten klaust du gar nichts. Wenn doch etwas bei dir gelandet ist, gib es wieder zurück."
+  },
+  {
+    "emoji": "🏠",
+    "titel": "Häuser bleiben stehen",
+    "text": "Bitte keine Häuser zerstören. Ein bisschen Chaos ist okay, aber nicht das ganze Haus. Im Zweifel vorher fragen. Bevor irgendetwas abgerissen wird, muss zuerst eine demokratische Abstimmung gemacht werden."
+  },
+  {
+    "emoji": "🚫",
+    "titel": "Nicht griefen",
+    "text": "Griefen ist auf dem Server nicht erlaubt. Mach nichts von anderen kaputt und verändere oder verunstalte nichts, auch nicht aus Spaß."
+  },
+  {
+    "emoji": "🎨",
+    "titel": "Nichts mit Absicht Hässliches bauen",
+    "text": "Baue keine Dinge, die extra hässlich sind, nur um andere zu ärgern oder die Gegend zu verunstalten. Gebaut wird, was zur Welt passt."
+  }
+]
+</script>
+
+<footer>
+  <p>Wer sich an die Regeln hält, bleibt auf dem Server. ⛏️</p>
+  <div class="hinweis">Viel Spaß beim Spielen!</div>
+</footer>
+
+
+<script>
+function rr(v,a){return (v>>>a)|(v<<(32-a));}
+function sha256(s){
+  var m=Math.pow,mw=m(2,32),i,j,r='',w=[],l=s.length*8,h=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],pc=k.length,ic={};
+  for(var c=2;pc<64;c++){if(!ic[c]){for(i=0;i<313;i+=c)ic[i]=c;h[pc]=(m(c,.5)*mw)|0;k[pc++]=(m(c,1/3)*mw)|0;}}
+  s+='\x80';while(s.length%64-56)s+='\x00';
+  for(i=0;i<s.length;i++){j=s.charCodeAt(i);if(j>>8)return '';w[i>>2]|=j<<((3-i)%4)*8;}
+  w[w.length]=((l/mw)|0);w[w.length]=(l);
+  for(j=0;j<w.length;){
+    var wt=w.slice(j,j+=16),o=h;h=h.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=wt[i-15],w2=wt[i-2],a=h[0],e=h[4],
+      t1=h[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&h[5])^((~e)&h[6]))+k[i]+(wt[i]=(i<16)?wt[i]:(wt[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+wt[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0),
+      t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&h[1])^(a&h[2])^(h[1]&h[2]));
+      h=[(t1+t2)|0].concat(h);h[4]=(h[4]+t1)|0;
+    }
+    for(i=0;i<8;i++)h[i]=(h[i]+o[i])|0;
+  }
+  for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(h[i]>>(j*8))&255;r+=((b<16)?0:'')+b.toString(16);}
+  return r;
+}
+
+var PW_HASH = '729d9051c37ac3fcf0ebfd8d6a3d4cfa24c94e611f71c98ce6d544422aed4109';
+var $ = function(id){ return document.getElementById(id); };
+
+function pwOk(pw){
+  var bytes = unescape(encodeURIComponent('mc-regeln:' + pw));
+  return sha256(bytes) === PW_HASH;
+}
+function loginOeffnen(){
+  $('loginOverlay').classList.add('offen');
+  $('pw').value = ''; $('fehler').textContent = '';
+  setTimeout(function(){ $('pw').focus(); }, 50);
+}
+function alleZu(){
+  $('loginOverlay').classList.remove('offen');
+  $('adminOverlay').classList.remove('offen');
+}
+function einloggen(){
+  if (pwOk($('pw').value)) {
+    $('loginOverlay').classList.remove('offen');
+    $('adminOverlay').classList.add('offen');
+  } else {
+    $('fehler').textContent = 'Falsches Passwort!';
+    var b = $('loginBox');
+    b.classList.remove('schuetteln'); void b.offsetWidth; b.classList.add('schuetteln');
+    $('pw').select();
+  }
+}
+$('adminBtn').addEventListener('click', loginOeffnen);
+$('loginGo').addEventListener('click', einloggen);
+$('loginZu').addEventListener('click', alleZu);
+$('logout').addEventListener('click', alleZu);
+$('pw').addEventListener('keydown', function(e){ if (e.key === 'Enter') einloggen(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') alleZu(); });
+
+/* ===== Regeln verwalten ===== */
+var STANDARD = JSON.parse($('regelnDaten').textContent);
+var regeln = regelnLaden();
+
+function regelnLaden(){
+  try {
+    var g = localStorage.getItem('mc-regeln');
+    if (g) { var p = JSON.parse(g); if (Array.isArray(p)) return p; }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(STANDARD));
+}
+function regelnSpeichern(){
+  try { localStorage.setItem('mc-regeln', JSON.stringify(regeln)); } catch (e) {}
+}
+function el(tag, cls, text){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function seiteZeichnen(){
+  var main = $('regeln');
+  main.innerHTML = '';
+  regeln.forEach(function(r, i){
+    var s = el('section', 'karte');
+    s.style.animationDelay = (0.1 + i * 0.15) + 's';
+    var h = el('h2');
+    h.appendChild(el('span', 'emoji', r.emoji || ''));
+    h.appendChild(document.createTextNode(r.titel || ''));
+    s.appendChild(el('div', 'nummer', String(i + 1)));
+    s.appendChild(h);
+    s.appendChild(el('p', '', r.text || ''));
+    main.appendChild(s);
+  });
+}
+function editorZeichnen(){
+  var ed = $('editor');
+  ed.innerHTML = '';
+  if (!regeln.length) ed.appendChild(el('div', 'leer', 'Noch keine Regeln. Füge unten eine hinzu!'));
+  regeln.forEach(function(r, i){
+    var box = el('div', 'edit-regel');
+    var kopf = el('div', 'kopf');
+    kopf.appendChild(el('span', '', 'REGEL ' + (i + 1)));
+    var tasten = el('span');
+    [['▲', -1], ['▼', 1]].forEach(function(t){
+      var b = el('button', 'mini', t[0]); b.type = 'button';
+      b.addEventListener('click', function(){
+        var j = i + t[1];
+        if (j < 0 || j >= regeln.length) return;
+        var tmp = regeln[i]; regeln[i] = regeln[j]; regeln[j] = tmp;
+        regelnSpeichern(); seiteZeichnen(); editorZeichnen();
+      });
+      tasten.appendChild(b);
+    });
+    var del = el('button', 'mini rot', '🗑'); del.type = 'button';
+    del.addEventListener('click', function(){
+      if (!confirm('Regel ' + (i + 1) + ' wirklich löschen?')) return;
+      regeln.splice(i, 1);
+      regelnSpeichern(); seiteZeichnen(); editorZeichnen();
+    });
+    tasten.appendChild(del);
+    kopf.appendChild(tasten);
+    box.appendChild(kopf);
+
+    var zeile = el('div', 'zeile');
+    var emo = el('input', 'emoji-feld'); emo.value = r.emoji || ''; emo.placeholder = '🙂'; emo.maxLength = 4;
+    var tit = el('input'); tit.value = r.titel || ''; tit.placeholder = 'Titel der Regel';
+    zeile.appendChild(emo); zeile.appendChild(tit);
+    var txt = el('textarea'); txt.value = r.text || ''; txt.placeholder = 'Erklärung';
+
+    function geaendert(){
+      r.emoji = emo.value; r.titel = tit.value; r.text = txt.value;
+      regelnSpeichern(); seiteZeichnen();
+    }
+    emo.addEventListener('input', geaendert);
+    tit.addEventListener('input', geaendert);
+    txt.addEventListener('input', geaendert);
+    box.appendChild(zeile); box.appendChild(txt);
+    ed.appendChild(box);
+  });
+}
+function exportieren(){
+  var klon = document.documentElement.cloneNode(true);
+  klon.querySelector('#regeln').innerHTML = '';
+  klon.querySelector('#editor').innerHTML = '';
+  klon.querySelector('#regelnDaten').textContent = '\n' + JSON.stringify(regeln, null, 2).replace(/</g, '\\u003c') + '\n';
+  klon.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('offen'); });
+  klon.querySelector('#ticketEinstellungen').textContent = JSON.stringify(EINSTELL);
+  klon.querySelector('#fehler').textContent = '';
+  var text = '<!DOCTYPE html>\n' + klon.outerHTML;
+  var blob = new Blob([text], { type: 'text/html' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'regeln.html';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+$('neueRegel').addEventListener('click', function(){
+  regeln.push({ emoji: '⭐', titel: 'Neue Regel', text: 'Beschreibe hier die Regel.' });
+  regelnSpeichern(); seiteZeichnen(); editorZeichnen();
+  var box = $('adminOverlay').querySelector('.box');
+  setTimeout(function(){ box.scrollTop = box.scrollHeight; }, 30);
+});
+$('export').addEventListener('click', exportieren);
+$('reset').addEventListener('click', function(){
+  if (!confirm('Alle Änderungen verwerfen und zur gespeicherten Version zurück?')) return;
+  try { localStorage.removeItem('mc-regeln'); } catch (e) {}
+  regeln = JSON.parse(JSON.stringify(STANDARD));
+  seiteZeichnen(); editorZeichnen();
+});
+$('adminBtn').addEventListener('click', editorZeichnen);
+seiteZeichnen();
+
+/* ===== Ticket-Tool ===== */
+var WEBHOOK_OK = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\S+$/;
+var EINSTELL = einstellungenLaden();
+var letzteMeldung = 0;
+
+function einstellungenLaden(){
+  var basis = { webhook: '' };
+  try { basis = JSON.parse($('ticketEinstellungen').textContent); } catch (e) {}
+  try {
+    var g = localStorage.getItem('mc-ticket-einstellungen');
+    if (g) { var p = JSON.parse(g); if (p && typeof p.webhook === 'string') return p; }
+  } catch (e) {}
+  return basis;
+}
+function pad2(n){ return String(n).padStart(2, '0'); }
+function datumDE(iso){
+  var p = iso.split('-');
+  return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0] : iso;
+}
+function meldeOeffnen(){
+  var d = new Date();
+  $('mSpieler').value = '';
+  $('mText').value = '';
+  $('mVon').value = '';
+  $('mDatum').value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  $('mZeit').value = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  $('mFehler').textContent = '';
+  $('mSenden').disabled = false;
+  $('meldeFormular').style.display = '';
+  $('meldeErgebnis').classList.remove('zeigen');
+  $('meldeOverlay').classList.add('offen');
+  setTimeout(function(){ $('mSpieler').focus(); }, 50);
+}
+function meldeZu(){ $('meldeOverlay').classList.remove('offen'); }
+function ticketText(t){
+  return '🚨 **Neues Regelbruch-Ticket**\n' +
+    '**Gemeldeter Spieler:** ' + t.spieler + '\n' +
+    '**Datum:** ' + datumDE(t.datum) + '\n' +
+    '**Uhrzeit:** ' + t.zeit + ' Uhr\n' +
+    '**Gemeldet von:** ' + (t.von || 'nicht angegeben') + '\n\n' +
+    '**Wie ist es abgelaufen:**\n' + t.text;
+}
+function ergebnisZeigen(gesendet, text, hinweis){
+  $('meldeFormular').style.display = 'none';
+  $('mErgebnisText').textContent = hinweis;
+  $('mTicketText').value = text;
+  $('mKopierBereich').style.display = gesendet ? 'none' : '';
+  $('meldeErgebnis').classList.add('zeigen');
+}
+function meldungAbsenden(){
+  var t = {
+    spieler: $('mSpieler').value.trim(),
+    datum: $('mDatum').value,
+    zeit: $('mZeit').value,
+    text: $('mText').value.trim(),
+    von: $('mVon').value.trim()
+  };
+  var f = $('mFehler');
+  if (!t.spieler) { f.textContent = 'Bitte gib den Namen des Spielers ein.'; return; }
+  if (!t.datum || !t.zeit) { f.textContent = 'Bitte gib Datum und Uhrzeit an.'; return; }
+  if (t.text.length < 10) { f.textContent = 'Bitte beschreibe genauer, wie es abgelaufen ist.'; return; }
+  if (Date.now() - letzteMeldung < 30000) { f.textContent = 'Bitte warte kurz, bevor du das nächste Ticket schickst.'; return; }
+  f.textContent = '';
+  var text = ticketText(t);
+  var url = (EINSTELL.webhook || '').trim();
+
+  if (!WEBHOOK_OK.test(url)) {
+    letzteMeldung = Date.now();
+    ergebnisZeigen(false, text, 'Dein Ticket ist fertig, aber noch nicht verschickt. Kopiere den Text und schick ihn einem Admin.');
+    return;
+  }
+  $('mSenden').disabled = true;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'Regelbruch-Tickets', content: text, allowed_mentions: { parse: [] } })
+  }).then(function(r){
+    letzteMeldung = Date.now();
+    if (r.ok) ergebnisZeigen(true, text, '✅ Dein Ticket wurde gesendet. Ein Admin schaut es sich an. Danke!');
+    else ergebnisZeigen(false, text, 'Das automatische Senden hat nicht geklappt. Kopiere den Text und schick ihn einem Admin.');
+  }).catch(function(){
+    ergebnisZeigen(false, text, 'Das automatische Senden hat nicht geklappt. Kopiere den Text und schick ihn einem Admin.');
+  });
+}
+function textKopieren(){
+  var feld = $('mTicketText');
+  feld.select();
+  var fertig = function(){ $('mKopieren').textContent = 'Kopiert ✓'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(feld.value).then(fertig).catch(function(){ document.execCommand('copy'); fertig(); });
+  } else {
+    document.execCommand('copy'); fertig();
+  }
+}
+
+$('meldeBtn').addEventListener('click', meldeOeffnen);
+$('mZu').addEventListener('click', meldeZu);
+$('mFertig').addEventListener('click', meldeZu);
+$('mSenden').addEventListener('click', meldungAbsenden);
+$('mKopieren').addEventListener('click', textKopieren);
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') meldeZu(); });
+
+/* Webhook-Einstellung im Admin-Panel */
+$('webhookFeld').value = EINSTELL.webhook || '';
+$('webhookFeld').addEventListener('input', function(){
+  var v = this.value.trim();
+  var info = $('webhookInfo');
+  if (v && !WEBHOOK_OK.test(v)) {
+    info.className = 'fehler';
+    info.textContent = 'Das ist keine gültige Discord-Webhook-URL.';
+    return;
+  }
+  EINSTELL.webhook = v;
+  try { localStorage.setItem('mc-ticket-einstellungen', JSON.stringify(EINSTELL)); } catch (e) {}
+  info.className = 'fehler ok';
+  info.textContent = v ? 'Gespeichert ✓' : 'Kein Webhook: Spieler bekommen den Ticket-Text zum Kopieren.';
+});
+</script>
+</body>
+</html>
